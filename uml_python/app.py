@@ -1,6 +1,6 @@
 import asyncio
 import flet as ft
-from services.gemini_service import GeminiProductService
+from services.gemini_service import DEFAULT_REQUEST, GeminiProductService
 
 
 def main(page: ft.Page):
@@ -44,6 +44,18 @@ def main(page: ft.Page):
     res_tags = ft.Text(italic=True, color="#1F7A8C", size=13, selectable=True)
     res_alt = ft.Text(color="#7A8797", size=13, selectable=True)
     copy_status = ft.Text(size=12, color="#26734D", visible=False)
+    request_field = ft.TextField(
+        value=DEFAULT_REQUEST,
+        label="Solicitud para esta descripción",
+        hint_text="¿Qué quieres que prepare la IA para esta imagen?",
+        multiline=True,
+        min_lines=2,
+        max_lines=4,
+        width=float("inf"),
+        text_size=13,
+        border_color="#B8D8DD",
+        focused_border_color="#1F7A8C",
+    )
 
     async def copy_result(e):
         if not state["result_text"]:
@@ -91,7 +103,8 @@ def main(page: ft.Page):
             # Ya no enviamos el json_field.value
             result = await asyncio.to_thread(
                 service.generate_description,
-                state["image_path"]
+                state["image_path"],
+                request_field.value,
             )
 
             # Mostramos resultados
@@ -145,6 +158,16 @@ def main(page: ft.Page):
         icon=ft.Icons.CONTENT_COPY,
         on_click=copy_result,
         style=ft.ButtonStyle(color="#1F7A8C", side=ft.BorderSide(1, "#1F7A8C")),
+    )
+
+    def restore_default_request(e):
+        request_field.value = DEFAULT_REQUEST
+        page.update()
+
+    restore_request_btn = ft.TextButton(
+        "Restaurar solicitud",
+        icon=ft.Icons.RESTORE,
+        on_click=restore_default_request,
     )
 
     # --- Composición ---
@@ -213,8 +236,10 @@ def main(page: ft.Page):
                                     ft.Text("2. Genera el contenido", size=18, weight=ft.FontWeight.BOLD,
                                             color="#243447")], spacing=10),
                             ft.Text(
-                                "Nuestra IA analizará los materiales, forma, estilo y detalles de tu imagen para crear una descripción completa y optimizada.",
+                                "Escribe qué necesitas para esta imagen y la IA generará el contenido.",
                                 color="#526173", size=14),
+                            request_field,
+                            ft.Row([restore_request_btn], alignment=ft.MainAxisAlignment.END),
                             ft.Row([generate_btn], alignment=ft.MainAxisAlignment.START),
                         ],
                         spacing=10,
