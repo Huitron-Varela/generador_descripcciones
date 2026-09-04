@@ -2,14 +2,17 @@ import os
 from PIL import Image
 from google import genai
 from google.genai import types
+from dotenv import load_dotenv
 from models.schemas import ProductDescription
+
+load_dotenv()
 
 class GeminiProductService:
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY", "").strip()
         if not api_key:
             raise RuntimeError("Falta GEMINI_API_KEY.")
-        self.model = "gemini-2.5-flash"
+        self.model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
         self.client = genai.Client(api_key=api_key)
 
     def generate_description(self, image_path: str, json_data: str) -> ProductDescription:
