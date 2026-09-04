@@ -15,22 +15,20 @@ class GeminiProductService:
         self.model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
         self.client = genai.Client(api_key=api_key)
 
-    def generate_description(self, image_path: str, json_data: str) -> ProductDescription:
+    def generate_description(self, image_path: str) -> ProductDescription:
         # Abrimos la imagen para enviarla al modelo
         image = Image.open(image_path)
         
         prompt = f"""
-        Actúa como el motor central de redacción publicitaria (copywriter) para un e-commerce.
-        Analiza la fotografía adjunta del producto y el siguiente bloque de datos JSON con las especificaciones técnicas:
-        
-        DATOS DEL PRODUCTO:
-        {json_data}
-        
+        Actúa como un Copywriter Senior especializado en e-commerce y analista de producto.
+        Tu objetivo es analizar meticulosamente la fotografía adjunta y deducir sus características, materiales, estilo y público objetivo basándote ÚNICAMENTE en la evidencia visual.
+
         INSTRUCCIONES:
-        1. Redacta un párrafo persuasivo en HTML que transforme características técnicas en beneficios claros.
-        2. Genera listas de viñetas (bullet points) que resuman las especificaciones más importantes.
-        3. Integra palabras clave relevantes para optimizar el SEO.
-        4. No inventes características que no se vean en la imagen o no estén en el JSON (evita alucinaciones).
+        1. Análisis Visual: Identifica el tipo de producto, colores principales, texturas aparentes, forma, y posibles usos o contextos.
+        2. Redacción Persuasiva (HTML): Redacta un párrafo comercial y atractivo que transforme lo que ves en la imagen en beneficios claros para el comprador.
+        3. Especificaciones (Viñetas): Genera una lista de bullet points con las características técnicas que se puedan inferir de la imagen (ej. "Diseño ergonómico", "Acabado mate", "Corte ajustado").
+        4. SEO: Integra palabras clave de intención de compra relevantes para este tipo de producto.
+        5. Regla de Oro: No inventes datos absolutos que no se puedan ver (como medidas exactas, peso en gramos o certificaciones invisibles). Mantente fiel a lo que la imagen demuestra.
         """
 
         response = self.client.models.generate_content(

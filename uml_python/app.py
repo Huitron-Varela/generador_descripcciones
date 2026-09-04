@@ -2,6 +2,7 @@ import asyncio
 import flet as ft
 from services.gemini_service import GeminiProductService
 
+
 def main(page: ft.Page):
     page.title = "Generador de Descripciones E-commerce"
     page.theme_mode = ft.ThemeMode.LIGHT
@@ -9,26 +10,12 @@ def main(page: ft.Page):
     page.scroll = ft.ScrollMode.AUTO
     page.padding = ft.Padding(24, 20, 24, 36)
 
+    # Eliminamos json_input del estado
     state = {
-        "image_path": None,
-        "json_input": '{\n  "producto": "Camisa Casual",\n  "color_base": "Azul marino",\n  "material": "100% Algodón"\n}'
+        "image_path": None
     }
 
     status_text = ft.Text("Sube una imagen para empezar", color="#526173", size=14)
-    
-    json_field = ft.TextField(
-        label="Datos del producto (JSON)",
-        value=state["json_input"],
-        multiline=True,
-        min_lines=6,
-        max_lines=8,
-        border_color="#D7DFEA",
-        focused_border_color="#1F7A8C",
-        cursor_color="#1F7A8C",
-        bgcolor="#FFFFFF",
-        text_size=14,
-        expand=True,
-    )
 
     image_preview = ft.Image(src="", width=360, height=280, fit=ft.BoxFit.CONTAIN, visible=False)
     preview_area = ft.Container(
@@ -48,7 +35,7 @@ def main(page: ft.Page):
         bgcolor="#F7FCFC",
         alignment=ft.Alignment(0, 0),
     )
-    
+
     # Resultados
     res_title = ft.Text(weight=ft.FontWeight.BOLD, size=21, color="#243447")
     res_desc = ft.Text(color="#526173", size=14)
@@ -82,32 +69,32 @@ def main(page: ft.Page):
             return
 
         generate_btn.disabled = True
-        status_text.value = "Generando descripción persuasiva con Gemini..."
+        status_text.value = "Analizando imagen y generando descripción..."
         status_text.color = "#1F7A8C"
         page.update()
 
         try:
             service = GeminiProductService()
-            # Ejecutamos en un hilo para no bloquear la UI de Flet
+            # Ya no enviamos el json_field.value
             result = await asyncio.to_thread(
-                service.generate_description, 
-                state["image_path"], 
-                json_field.value
+                service.generate_description,
+                state["image_path"]
             )
-            
+
             # Mostramos resultados
             res_title.value = result.seo_title
             res_desc.value = result.descripcion_html
             res_bullets.controls = [
                 ft.Row(
-                    [ft.Icon(ft.Icons.CHECK_CIRCLE_OUTLINE, color="#26734D", size=18), ft.Text(b, color="#526173", expand=True)],
+                    [ft.Icon(ft.Icons.CHECK_CIRCLE_OUTLINE, color="#26734D", size=18),
+                     ft.Text(b, color="#526173", expand=True)],
                     spacing=8,
                 )
                 for b in result.bullet_points
             ]
             res_tags.value = f"Tags: {', '.join(result.tags_busqueda)}"
             res_alt.value = f"Alt Text: {result.ui_metadata.alt_text}"
-            
+
             status_text.value = "Descripción generada correctamente."
             status_text.color = "#26734D"
         except Exception as ex:
@@ -162,7 +149,8 @@ def main(page: ft.Page):
                         [
                             ft.Text("ESTUDIO DE PRODUCTO", size=12, color="#D97742", weight=ft.FontWeight.BOLD),
                             ft.Text("Generador de contenido", size=30, weight=ft.FontWeight.BOLD, color="#243447"),
-                            ft.Text("Convierte una fotografía en una ficha de producto lista para vender.", size=15, color="#526173"),
+                            ft.Text("Convierte una fotografía en una ficha de producto lista para vender.", size=15,
+                                    color="#526173"),
                         ],
                         spacing=7,
                         expand=True,
@@ -179,7 +167,8 @@ def main(page: ft.Page):
                     content=ft.Column(
                         [
                             ft.Row([ft.Icon(ft.Icons.IMAGE_OUTLINED, color="#1F7A8C", size=23),
-                                    ft.Text("1. Sube la fotografía", size=18, weight=ft.FontWeight.BOLD, color="#243447")], spacing=10),
+                                    ft.Text("1. Sube la fotografía", size=18, weight=ft.FontWeight.BOLD,
+                                            color="#243447")], spacing=10),
                             preview_area,
                             ft.Row([upload_btn], alignment=ft.MainAxisAlignment.CENTER),
                             status_text,
@@ -189,13 +178,18 @@ def main(page: ft.Page):
                     padding=24, border_radius=16, bgcolor="#FFFFFF",
                     border=ft.Border.all(1, "#E1E8F0"), col={"sm": 12, "md": 6},
                 ),
+                # Reestructuramos esta columna para quitar el JSON
                 ft.Container(
                     content=ft.Column(
                         [
-                            ft.Row([ft.Icon(ft.Icons.DATA_OBJECT, color="#1F7A8C", size=23),
-                                    ft.Text("2. Describe el producto", size=18, weight=ft.FontWeight.BOLD, color="#243447")], spacing=10),
-                            json_field,
-                            ft.Row([generate_btn], alignment=ft.MainAxisAlignment.END),
+                            ft.Row([ft.Icon(ft.Icons.AUTO_AWESOME_MOTION, color="#1F7A8C", size=23),
+                                    ft.Text("2. Genera el contenido", size=18, weight=ft.FontWeight.BOLD,
+                                            color="#243447")], spacing=10),
+                            ft.Text(
+                                "Nuestra IA analizará los materiales, forma, estilo y detalles de tu imagen para crear una descripción completa y optimizada.",
+                                color="#526173", size=14),
+                            ft.Container(height=20),  # Espaciador
+                            ft.Row([generate_btn], alignment=ft.MainAxisAlignment.START),
                         ],
                         spacing=16,
                     ),
@@ -207,6 +201,7 @@ def main(page: ft.Page):
         ),
         ft.Container(content=results_panel, padding=ft.Padding(0, 18, 0, 0)),
     )
+
 
 if __name__ == "__main__":
     ft.run(main)
