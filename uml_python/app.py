@@ -8,16 +8,17 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.LIGHT
     page.bgcolor = "#F4F7FB"
     page.scroll = ft.ScrollMode.AUTO
-    page.padding = ft.Padding(24, 20, 24, 36)
+    page.padding = ft.Padding(12, 10, 12, 18)
 
     # Eliminamos json_input del estado
     state = {
-        "image_path": None
+        "image_path": None,
+        "result_text": "",
     }
 
     status_text = ft.Text("Sube una imagen para empezar", color="#526173", size=14)
 
-    image_preview = ft.Image(src="", width=360, height=280, fit=ft.BoxFit.CONTAIN, visible=False)
+    image_preview = ft.Image(src="", width=360, height=220, fit=ft.BoxFit.CONTAIN, visible=False)
     preview_area = ft.Container(
         content=ft.Column(
             [
@@ -29,7 +30,7 @@ def main(page: ft.Page):
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=8,
         ),
-        height=300,
+        height=238,
         border=ft.Border.all(2, "#B8D8DD"),
         border_radius=16,
         bgcolor="#F7FCFC",
@@ -37,11 +38,23 @@ def main(page: ft.Page):
     )
 
     # Resultados
-    res_title = ft.Text(weight=ft.FontWeight.BOLD, size=21, color="#243447")
-    res_desc = ft.Text(color="#526173", size=14)
-    res_bullets = ft.Column(spacing=6)
-    res_tags = ft.Text(italic=True, color="#1F7A8C", size=13)
-    res_alt = ft.Text(color="#7A8797", size=13)
+    res_title = ft.Text(weight=ft.FontWeight.BOLD, size=21, color="#243447", selectable=True)
+    res_desc = ft.Text(color="#526173", size=14, selectable=True)
+    res_bullets = ft.Column(spacing=4)
+    res_tags = ft.Text(italic=True, color="#1F7A8C", size=13, selectable=True)
+    res_alt = ft.Text(color="#7A8797", size=13, selectable=True)
+    copy_status = ft.Text(size=12, color="#26734D", visible=False)
+
+    async def copy_result(e):
+        if not state["result_text"]:
+            copy_status.value = "Genera un resultado primero."
+            copy_status.color = "#B45309"
+        else:
+            await page.clipboard.set(state["result_text"])
+            copy_status.value = "Resultado copiado al portapapeles."
+            copy_status.color = "#26734D"
+        copy_status.visible = True
+        page.update()
 
     # --- Selector de Archivos ---
     async def pick_image(e):
@@ -94,6 +107,13 @@ def main(page: ft.Page):
             ]
             res_tags.value = f"Tags: {', '.join(result.tags_busqueda)}"
             res_alt.value = f"Alt Text: {result.ui_metadata.alt_text}"
+            state["result_text"] = "\n\n".join([
+                result.seo_title,
+                result.descripcion_html,
+                "\n".join(f"- {bullet}" for bullet in result.bullet_points),
+                res_tags.value,
+                res_alt.value,
+            ])
 
             status_text.value = "Descripción generada correctamente."
             status_text.color = "#26734D"
@@ -120,6 +140,12 @@ def main(page: ft.Page):
         on_click=pick_image,
         style=ft.ButtonStyle(color="#1F7A8C", side=ft.BorderSide(1, "#1F7A8C")),
     )
+    copy_btn = ft.OutlinedButton(
+        "Copiar resultado",
+        icon=ft.Icons.CONTENT_COPY,
+        on_click=copy_result,
+        style=ft.ButtonStyle(color="#1F7A8C", side=ft.BorderSide(1, "#1F7A8C")),
+    )
 
     # --- Composición ---
     results_panel = ft.Container(
@@ -132,10 +158,11 @@ def main(page: ft.Page):
                 ),
                 ft.Divider(color="#E4EAF1", height=1),
                 res_title, res_desc, res_bullets, res_tags, res_alt,
+                ft.Row([copy_btn, copy_status], spacing=10),
             ],
-            spacing=12,
+            spacing=8,
         ),
-        padding=24,
+        padding=14,
         border_radius=16,
         bgcolor="#FFFFFF",
         border=ft.Border.all(1, "#E1E8F0"),
@@ -159,7 +186,7 @@ def main(page: ft.Page):
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             ),
-            padding=ft.Padding(4, 0, 4, 20),
+            padding=ft.Padding(4, 0, 4, 8),
         ),
         ft.ResponsiveRow(
             [
@@ -173,9 +200,9 @@ def main(page: ft.Page):
                             ft.Row([upload_btn], alignment=ft.MainAxisAlignment.CENTER),
                             status_text,
                         ],
-                        spacing=14,
+                        spacing=8,
                     ),
-                    padding=24, border_radius=16, bgcolor="#FFFFFF",
+                    padding=14, border_radius=12, bgcolor="#FFFFFF",
                     border=ft.Border.all(1, "#E1E8F0"), col={"sm": 12, "md": 6},
                 ),
                 # Reestructuramos esta columna para quitar el JSON
@@ -188,18 +215,17 @@ def main(page: ft.Page):
                             ft.Text(
                                 "Nuestra IA analizará los materiales, forma, estilo y detalles de tu imagen para crear una descripción completa y optimizada.",
                                 color="#526173", size=14),
-                            ft.Container(height=20),  # Espaciador
                             ft.Row([generate_btn], alignment=ft.MainAxisAlignment.START),
                         ],
-                        spacing=16,
+                        spacing=10,
                     ),
-                    padding=24, border_radius=16, bgcolor="#FFFFFF",
+                    padding=14, border_radius=12, bgcolor="#FFFFFF",
                     border=ft.Border.all(1, "#E1E8F0"), col={"sm": 12, "md": 6},
                 ),
             ],
-            spacing=18,
+            spacing=10,
         ),
-        ft.Container(content=results_panel, padding=ft.Padding(0, 18, 0, 0)),
+        ft.Container(content=results_panel, padding=ft.Padding(0, 10, 0, 0)),
     )
 
 
