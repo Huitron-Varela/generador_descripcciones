@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Generador de diagramas UML con IA a partir de requerimientos." />
+  <title>UML AI Studio</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">U</div><div><strong>UML AI Studio</strong><span>Requirements → Models</span></div></div>
+      <nav class="side-nav" aria-label="Navegación">
+        <button class="side-item active" data-view="studio"><span>◫</span> Estudio UML</button>
+        <button class="side-item" data-view="guide"><span>?</span> Guía rápida</button>
+      </nav>
+      <div class="model-card"><span class="dot"></span><div><small>LLM configurado</small><strong id="modelName">Comprobando…</strong></div></div>
+      <div class="sidebar-note">La API Key se conserva en el servidor y nunca se envía al navegador.</div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div><p class="eyebrow">Modelado asistido por IA</p><h1>Convierte requerimientos en UML</h1><p class="subtitle">Describe el sistema como lo entiendes. La IA estructura el análisis y tú validas antes de generar el modelo.</p></div>
+        <div class="status-pill" id="apiStatus"><span class="status-dot"></span><span>Verificando API…</span></div>
+      </header>
+
+      <section id="studioView">
+        <ol class="stepper" aria-label="Progreso">
+          <li class="step active" data-step="1"><span>1</span><div><strong>Diagrama</strong><small>Qué deseas modelar</small></div></li>
+          <li class="step" data-step="2"><span>2</span><div><strong>Requerimiento</strong><small>Cómo lo describirás</small></div></li>
+          <li class="step" data-step="3"><span>3</span><div><strong>Análisis IA</strong><small>Revisa la interpretación</small></div></li>
+          <li class="step" data-step="4"><span>4</span><div><strong>UML</strong><small>Genera y refina</small></div></li>
+        </ol>
+
+        <section class="panel" id="step1Panel">
+          <div class="panel-head"><div><span class="section-kicker">Paso 1</span><h2>¿Qué necesitas representar?</h2><p>Selecciona el tipo de diagrama. La captura se adaptará automáticamente a tu elección.</p></div></div>
+          <div class="diagram-grid">
+            <button class="diagram-card" data-diagram="use_case"><span class="diagram-icon">◎</span><strong>Casos de uso</strong><p>Actores, funcionalidades y relaciones del sistema.</p><span class="tag">Análisis funcional</span></button>
+            <button class="diagram-card" data-diagram="class"><span class="diagram-icon">▦</span><strong>Clases</strong><p>Entidades, atributos, operaciones y relaciones.</p><span class="tag">Modelo estructural</span></button>
+            <button class="diagram-card" data-diagram="sequence"><span class="diagram-icon">⇄</span><strong>Secuencia</strong><p>Participantes, mensajes y orden de interacción.</p><span class="tag">Comportamiento</span></button>
+            <button class="diagram-card" data-diagram="activity"><span class="diagram-icon">◇</span><strong>Actividad</strong><p>Procesos, decisiones y rutas de ejecución.</p><span class="tag">Flujo de proceso</span></button>
+          </div>
+        </section>
+
+        <section class="panel hidden" id="step2Panel">
+          <div class="panel-head split"><div><span class="section-kicker">Paso 2</span><h2>Describe el requerimiento</h2><p id="diagramContext">Seleccionaste un diagrama.</p></div><button class="text-btn" id="changeDiagram">Cambiar diagrama</button></div>
+          <div class="mode-toggle" role="group" aria-label="Tipo de redacción">
+            <button class="mode active" data-mode="informal"><strong>Redacción informal</strong><span>Explícalo con tus propias palabras</span></button>
+            <button class="mode" data-mode="formal"><strong>Redacción formal</strong><span>RF, actores, reglas y restricciones</span></button>
+          </div>
+          <div class="composer">
+            <div class="composer-head"><label for="requirements">Requerimiento del sistema</label><span id="charCount">0 / 30,000</span></div>
+            <textarea id="requirements" maxlength="30000" placeholder="Ejemplo: Necesito un sistema para una biblioteca donde los usuarios puedan consultar libros, solicitar préstamos y el bibliotecario pueda registrar devoluciones…"></textarea>
+            <div class="prompt-hints" id="promptHints"></div>
+            <div class="composer-actions"><button class="secondary-btn" id="loadExample">Usar ejemplo</button><button class="primary-btn" id="analyzeBtn"><span>Analizar con IA</span><span class="arrow">→</span></button></div>
+          </div>
+        </section>
+
+        <section class="panel hidden" id="step3Panel">
+          <div class="panel-head split"><div><span class="section-kicker">Paso 3</span><h2>Revisa la interpretación</h2><p>La IA no genera todavía el diagrama. Primero valida qué entendió de tu requerimiento.</p></div><div class="confidence"><span>Confianza</span><strong id="confidenceValue">—</strong></div></div>
+          <div class="analysis-layout">
+            <div class="analysis-main">
+              <div class="summary-card"><span class="mini-label">Resumen</span><h3 id="systemName">—</h3><p id="summaryText">—</p></div>
+              <div class="analysis-card"><div class="card-title"><h3>Requerimientos normalizados</h3><span class="count" id="requirementsCount">0</span></div><ul id="normalizedList" class="clean-list"></ul></div>
+              <div class="analysis-card"><div class="card-title"><h3>Elementos UML detectados</h3><span class="count" id="elementsCount">0</span></div><div id="elementsGrid" class="element-grid"></div></div>
+            </div>
+            <aside class="analysis-side">
+              <div class="review-box warning"><div class="review-title"><span>△</span><strong>Supuestos</strong></div><ul id="assumptionsList"></ul></div>
+              <div class="review-box"><div class="review-title"><span>?</span><strong>Ambigüedades</strong></div><ul id="ambiguitiesList"></ul></div>
+              <button class="secondary-btn full" id="backToEdit">← Modificar requerimiento</button>
+              <button class="primary-btn full" id="generateBtn">Generar UML →</button>
+            </aside>
+          </div>
+        </section>
+
+        <section class="panel hidden" id="step4Panel">
+          <div class="panel-head split"><div><span class="section-kicker">Paso 4</span><h2>Diagrama UML</h2><p>Resultado generado a partir del modelo estructurado que acabas de validar.</p></div><div class="export-group"><button class="secondary-btn" id="downloadPuml">Descargar .puml</button><button class="secondary-btn" id="downloadSvg">Descargar SVG</button></div></div>
+          <div class="uml-layout">
+            <div class="uml-canvas-wrap">
+              <div class="canvas-toolbar"><span id="diagramLabel">Vista del diagrama</span><div><button class="icon-btn" id="zoomOut" title="Alejar">−</button><button class="icon-btn" id="zoomReset" title="Restablecer">100%</button><button class="icon-btn" id="zoomIn" title="Acercar">+</button></div></div>
+              <div class="uml-canvas" id="umlCanvas"><div class="empty-render"><div class="spinner"></div><strong>Generando diagrama…</strong></div></div>
+            </div>
+            <aside class="refine-card"><span class="mini-label">Refinar con IA</span><h3>¿Quieres cambiar algo?</h3><p>Describe el cambio sin volver a comenzar. El LLM actualizará el modelo conservando lo demás.</p><textarea id="refineInstruction" rows="6" placeholder="Ejemplo: agrega que el administrador también puede cancelar una reserva y notificar al usuario."></textarea><button class="primary-btn full" id="refineBtn">Aplicar cambio</button><button class="text-btn full" id="newDiagram">Crear otro diagrama</button><details><summary>Ver código PlantUML</summary><pre id="plantumlCode"></pre></details></aside>
+          </div>
+        </section>
+      </section>
+
+      <section id="guideView" class="panel hidden guide">
+        <span class="section-kicker">Guía rápida</span><h2>Cómo obtener mejores modelos</h2>
+        <div class="guide-grid"><article><strong>1. Explica quién usa el sistema</strong><p>Menciona roles, perfiles o sistemas externos involucrados.</p></article><article><strong>2. Describe acciones observables</strong><p>Indica qué debe poder hacer cada actor y bajo qué condiciones.</p></article><article><strong>3. Señala reglas importantes</strong><p>Incluye restricciones, permisos, estados, validaciones o dependencias.</p></article><article><strong>4. Revisa antes de generar</strong><p>Los supuestos y ambigüedades te permiten detectar interpretaciones dudosas.</p></article></div>
+      </section>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      <div class="loading-overlay hidden" id="loadingOverlay"><div class="loading-card"><div class="spinner big"></div><strong id="loadingTitle">Analizando requerimiento</strong><p id="loadingText">El LLM está estructurando la información…</p></div></div>
+    </main>
+  </div>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

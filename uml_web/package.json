@@ -1,0 +1,21 @@
+{
+  "name": "uml-ai-studio-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sistema web para generar diagramas UML a partir de requerimientos con GPT-5.6 Terra.",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "check": "node --check server.js && node --check src/services/openai.service.js && node --check src/uml/plantuml.js && node --check public/js/app.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "openai": "^5.19.1"
+  }
+}
